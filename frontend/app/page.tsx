@@ -36,17 +36,52 @@ interface HomepageData {
   servicesPreview: ServiceItem[];
 }
 
+interface MediaField {
+  url: string;
+  alternativeText?: string;
+}
+
+interface RichTextNode {
+  children?: Array<{
+    text?: string;
+  }>;
+}
+
+interface HomepageWhyChooseUsApiItem {
+  id: number;
+  title: string;
+  description: string;
+  icon?: MediaField;
+}
+
+interface HomepageServiceApiItem {
+  id: number;
+  title: string;
+  description?: string | RichTextNode[];
+  slug: string;
+  icon?: MediaField;
+}
+
+interface HomepageApiResponseData {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroCTA: string;
+  heroImage?: MediaField;
+  whyChooseUs?: HomepageWhyChooseUsApiItem[];
+  servicesPreview?: HomepageServiceApiItem[];
+}
+
 // Server Component data fetching
 async function getHomepageData(): Promise<HomepageData> {
   try {
-    const res = await axios.get(
+    const res = await axios.get<{ data: HomepageApiResponseData }>(
       "http://localhost:1337/api/homepage?populate[0]=heroImage&populate[1]=whyChooseUs.icon&populate[2]=servicesPreview.icon"
     );
 
     const homepage = res.data.data;
 
     const whyChooseUs: WhyChooseUsItem[] = (homepage.whyChooseUs || []).map(
-      (item: any) => ({
+      (item) => ({
         id: item.id,
         title: item.title,
         description: item.description,
@@ -60,12 +95,14 @@ async function getHomepageData(): Promise<HomepageData> {
     );
 
     const servicesPreview: ServiceItem[] = (homepage.servicesPreview || []).map(
-      (item: any) => ({
+      (item) => ({
         id: item.id,
         title: item.title,
         // Parse rich text description - get the text from the first paragraph
         description:
-          item.description?.[0]?.children?.[0]?.text || item.description || "",
+          typeof item.description === "string"
+            ? item.description
+            : item.description?.[0]?.children?.[0]?.text || "",
         slug: item.slug,
         icon: item.icon
           ? {
