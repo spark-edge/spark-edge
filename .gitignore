@@ -45,3 +45,6 @@ next-env.d.ts
 # uploads
 backend/public/uploads/*
 !backend/public/uploads/.gitkeep
+
+# codex file
+.codex
